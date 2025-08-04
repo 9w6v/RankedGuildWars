@@ -1,0 +1,26 @@
+{
+  "name": "rankedguildwars",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/9w6v/RankedGuildWars.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/9w6v/RankedGuildWars/issues"
+  },
+  "homepage": "https://github.com/9w6v/RankedGuildWars#readme",
+  "description": "",
+  "dependencies": {
+    "discord.js": "^14.21.0",
+    "dotenv": "^17.2.1",
+    "mineflayer": "^4.31.0",
+    "mongoose": "^8.17.0"
+  }
+}
