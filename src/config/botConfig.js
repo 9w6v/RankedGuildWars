@@ -4,5 +4,4 @@ module.exports = {
     username: 'RankedGuildWars',
     auth: 'offline',
     version: '1.8.9',
-    bedwarsLobbyName: 'Bedwars Lobby #1',
 };

@@ -1,7 +1,5 @@
 require('dotenv').config();
 const mineflayer = require('mineflayer');
-const { pathfinder, Movements, goals } = require('mineflayer-pathfinder');
-const { Vec3 } = require('vec3');
 const botConfig = require('../config/botConfig.js');
 
 let bot;
@@ -16,24 +14,22 @@ function createBot() {
         version: botConfig.version,
     })
 
-    bot.loadPlugin(pathfinder);
 
-    let loginTimeout;
 
     bot.once('spawn', async () => {
         console.log('[RankedGuildWars] Bot Spawned');
 
-        loginTimeout = setTimeout(() => {
-            console.log("[RankedGuildWars] Sending Login...");
-            bot.chat(`/login ${process.env.BOT_PASSWORD}`)
-        })
+        console.log("[RankedGuildWars] Sending Login...");
+        bot.chat(`/login ${process.env.BOT_PASSWORD}`);
 
-    setTimeout(() => goToBedwars(), 6000);
+    setTimeout(() => goToBedwars(), 3000);
     })
 
     bot.on('end', () => {
         console.log('[RankedGuildWars] Disconnected. Retrying in 5 seconds...');
-        reconnect();
+        setTimeout(() => {
+            createBot();
+        }, 5000);
     })
 
     bot.on('kicked', (reason) => {
@@ -46,7 +42,26 @@ function createBot() {
     })
 
     bot.on('windowOpen', (window) => {
-        handleWindowClick(window);
+        if (!window.title) return;
+
+        if (window.title.includes('Server Selector')) {
+            const bedItem = window.slots.find((item) => item && item.name === 'bed');
+            if (!bedItem) return;
+
+            console.log('[RankedGuildWars] Clicking Bedwars...');
+            bot.clickWindow(bedItem.slot, 0, 0);
+            goToFirstLobby();
+        } else if (window.title.includes('Lobby Selector')) {
+            // const bedItem = window.slots.find((item) => item && item.displayName && item.displayName.includes('#1') && item.displayName.includes('Bed') );
+            // if (!bedItem) {
+            //     console.log(`[RankedGuildWars] Couldn't find the Bedwars Lobby #1`)
+            //     return;
+            // }
+
+            console.log('[RankedGuildWars] Selecting Bedwars Lobby #1...');
+            bot.clickWindow(10, 0, 0);
+            console.log('[RankedGuildWars] Connected to Bedwars Lobby #1');
+        }
     })
 
 
@@ -62,43 +77,8 @@ function createBot() {
         console.log(`[RankedGuildWars] Opened Lobby Selector.`);
     }
 
-    async function handleWindowClick(window) {
-        if (!window.title) return;
 
-        if (window.title.includes('Server Selector')) {
-            const bedItem = window.slots.find((item) => item && item.name === 'bed');
-            if (!bedItem) return;
-
-            console.log('[RankedGuildWars] Clicking Bedwars...');
-            bot.clickWindow(bedItem.slot, 0, 0);
-            await sleep(6000);
-            goToFirstLobby();
-        } else if (window.title.includes('Lobby Selector')) {
-            const bedItem = window.slots.find((item) => item && item.name === 'bed' && item.displayName.includes('#1'));
-            if (!bedItem) return;
-
-            console.log('[RankedGuildWars] Selecting Bedwars Lobby #1...');
-            bot.clickWindow(bedItem.slot, 0, 0);
-        }
-    }
-
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    function reconnect() {
-        if (reconnectTries >= 5) {
-            console.log(`[RankedGuildWars] Too many reconnect attempts. Exiting...`)
-            process.exit(1);
-        }
-
-        setTimeout(() => {
-            reconnectTries++;
-            console.log(`[RankedGuildWars] Reconnecting... (${reconnectTries})`)
-            createBot();
-        }, 5000);
-    }
-
+    setInterval(() => goToFirstLobby(), 60 * 1000);
 }
 
 createBot();
