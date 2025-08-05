@@ -3,5 +3,6 @@ module.exports = {
     port: 25565,
     username: 'RankedGuildWars',
     auth: 'offline',
-    bedwarsLobbyName: 'Bedwars Lobby #1'
+    version: '1.8.9',
+    bedwarsLobbyName: 'Bedwars Lobby #1',
 };
