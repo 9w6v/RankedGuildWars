@@ -3,7 +3,6 @@ const mineflayer = require('mineflayer');
 const botConfig = require('../config/botConfig.js');
 
 let bot;
-let reconnectTries = 0;
 
 function createBot() {
     bot = mineflayer.createBot({
@@ -14,73 +13,90 @@ function createBot() {
         version: botConfig.version,
     })
 
+    bot.on('message', (jsonMessage) => {
+        const msg = jsonMessage.toString();
+        if (msg.includes('rebooting')) {
+        console.log(`[RankedGuildWars] ${msg}`);
+        }
+    });
+
 
 
     bot.once('spawn', async () => {
         console.log('[RankedGuildWars] Bot Spawned');
 
-        console.log("[RankedGuildWars] Sending Login...");
+        await sleep(2000);
         bot.chat(`/login ${process.env.BOT_PASSWORD}`);
+        console.log("[RankedGuildWars] Logged in.");
+        
+        await sleep(2000);
+        bot.setQuickBarSlot(4);
+        bot.activateItem();
+      
 
-    setTimeout(() => goToBedwars(), 3000);
     })
 
-    bot.on('end', () => {
-        console.log('[RankedGuildWars] Disconnected. Retrying in 5 seconds...');
+    bot.on('windowOpen', async (window) => {
+        if (!window.title) return;
+
+        if (window.title.includes('Server Selector')) {
+            console.log('[RankedGuildWars] Opened Server Selecter Menu');
+            const bedItem = window.slots.find((item) => item && item.name === 'bed');
+            if (!bedItem) return;
+            
+            bot.clickWindow(bedItem.slot, 0, 0);
+            console.log('[RankedGuildWars] Joined Bedwars Lobby');
+            await sleep(2000);
+            goToFirstLobby();
+        } else if (window.title.includes('Lobby Selector')) {
+            console.log('[RankedGuildWars] Opened Lobby Selecter Menu');
+            await sleep(2000);
+
+            for (const item of window.slots) {
+                if (!item) continue;
+
+                const rawName = item?.nbt?.value?.display?.value?.Name?.value || '';
+                const itemName = stripMinecraftColors(rawName);
+                if (itemName == 'BedWars Lobby #1') {
+                    await bot.clickWindow(item.slot, 0, 0);
+                    console.log('[RankedGuildWars] Joined Bedwars Lobby #1');
+                    await sleep(2000);
+                    break;
+                }
+            }
+        }
+    });
+
+    function goToFirstLobby() {
+        bot.setQuickBarSlot(6);
+        bot.activateItem();
+    }
+
+    bot.on('end', (reason) => {
+        console.log(`[RankedGuildWars] Disconnected. Reason: ${reason}.\nRetrying in 5 seconds...`);
         setTimeout(() => {
             createBot();
         }, 5000);
     })
 
-    bot.on('kicked', (reason) => {
-        console.log(`[RankedGuildWars] Kicked. Reason: ${reason}`);
-        reconnect();
+    bot.on('kicked', (reason, loggedIn) => {
+        console.log(`[RankedGuildWars] Kicked. Reason: ${reason}. (${loggedIn})\nReconnecting in 5 seconds...`);
+        setTimeout(() => {
+            createBot();
+        }, 5000);
     })
 
     bot.on('error', (error) => {
         console.log(`[RankedGuildWars] An Error Occured. Error: ${error}`);
     })
 
-    bot.on('windowOpen', (window) => {
-        if (!window.title) return;
-
-        if (window.title.includes('Server Selector')) {
-            const bedItem = window.slots.find((item) => item && item.name === 'bed');
-            if (!bedItem) return;
-
-            console.log('[RankedGuildWars] Clicking Bedwars...');
-            bot.clickWindow(bedItem.slot, 0, 0);
-            goToFirstLobby();
-        } else if (window.title.includes('Lobby Selector')) {
-            // const bedItem = window.slots.find((item) => item && item.displayName && item.displayName.includes('#1') && item.displayName.includes('Bed') );
-            // if (!bedItem) {
-            //     console.log(`[RankedGuildWars] Couldn't find the Bedwars Lobby #1`)
-            //     return;
-            // }
-
-            console.log('[RankedGuildWars] Selecting Bedwars Lobby #1...');
-            bot.clickWindow(10, 0, 0);
-            console.log('[RankedGuildWars] Connected to Bedwars Lobby #1');
-        }
-    })
-
-
-    function goToBedwars() {
-        bot.setQuickBarSlot(4);
-        bot.activateItem();
-        console.log(`[RankedGuildWars] Opened Game Selector.`);
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    function goToFirstLobby() {
-        bot.setQuickBarSlot(6);
-        bot.activateItem();
-        console.log(`[RankedGuildWars] Opened Lobby Selector.`);
-    }
+    const stripMinecraftColors = (text) => text.replace(/§[0-9a-fk-or]/gi, '');
 
-
-    setInterval(() => goToFirstLobby(), 60 * 1000);
 }
 
-createBot();
 
 module.exports = { createBot };
