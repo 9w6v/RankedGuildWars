@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const getPlayerProfile = require('../../services/pikaApi.js');
+const getPlayerProfile = require('../../../services/pikaApi.js');
 const { checkEmoji, crossEmoji } = require('../../config/config.js');
 
 module.exports = {
