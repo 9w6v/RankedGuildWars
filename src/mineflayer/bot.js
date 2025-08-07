@@ -13,14 +13,6 @@ function createBot() {
         version: botConfig.version,
     })
 
-    bot.on('message', (jsonMessage) => {
-        const msg = jsonMessage.toString();
-        if (msg.includes('rebooting')) {
-        console.log(`[RankedGuildWars] ${msg}`);
-        }
-    });
-
-
 
     bot.once('spawn', async () => {
         console.log('[RankedGuildWars] Bot Spawned');
@@ -98,5 +90,8 @@ function createBot() {
 
 }
 
+function getBot() {
+    return bot;
+}
 
-module.exports = { createBot };
+module.exports = { getBot, createBot };
