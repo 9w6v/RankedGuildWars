@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const getPlayerProfile = require('../../../services/pikaApi.js');
-const { permission } = require('../../../config/config.json');
+const { command } = require('../../../config/permission.json');
 const { checkEmoji, crossEmoji }  = require('../../../config/config.json');
 const { generateCode, storeCode } = require('../../../utils/codeManager.js');
 const User = require('../../../database/models/userSchema.js');
@@ -19,7 +19,7 @@ module.exports = {
 
 		const commandName = interaction.commandName;
         const member = interaction.member; 
-        const allowedRoles = permission[commandName];
+        const allowedRoles = command[commandName];
 
         if (!allowedRoles) {
             return interaction.editReply(`<:crosser:${crossEmoji}> This command is not configured for permission checks.`);
@@ -39,12 +39,17 @@ module.exports = {
 
 		const IGN = interaction.options.getString('ign');
 
+		const ignRegex = /^[a-zA-Z0-9_]{3,16}$/;
+		if (!ignRegex.test(IGN)) {
+			return interaction.editReply(`<:crosser:${crossEmoji}> Please enter a valid Minecraft in-game name.`);
+		}
+
         const { data, error } = await getPlayerProfile(IGN);
         if (error === 'not_found_in_database') {
             await interaction.editReply(`<:crosser:${crossEmoji}> Please enter a valid in-game name.` );
             return;
         } else if (error !== null) {
-            await interaction.editReply(`<:crosser:${crossEmoji}> There was an error during linking process.` );
+            await interaction.editReply(`<:crosser:${crossEmoji}> Please enter a valid in-game name.` );
             return;
         }
 		
@@ -69,19 +74,27 @@ async function completeLinkingProcess(info, ign) {
 	try {
 		const { interaction, client, discordId } = info;
 
+		const user = await User.findOne({ discordId: discordId });
+
 		const guild = await client.guilds.fetch(guildId);
 		const member = await guild.members.fetch(discordId);
 
-		await member.roles.add(registeredRole);
-		await member.roles.remove(nonRegisteredRole);
-		await member.setNickname(ign);
+		if (user) {
+			await member.setNickname(ign);
+			user.ign = ign;
+			user.save();
+		} else {
+			await member.roles.add(registeredRole);
+			await member.roles.remove(nonRegisteredRole);
+			await member.setNickname(ign);
 
-		await User.create({
-			discordId: discordId,
-			ign: ign,
-		});
+			await User.create({
+				discordId: discordId,
+				ign: ign,
+			});
+		}
 
-		await interaction.editReply(`<:ticker:${checkEmoji}> You have successfully linked your Discord and Minecraft accounts.`)
+		await interaction.editReply(`<:ticker:${checkEmoji}> You have successfully linked your Discord account with \`${ign}\``);
 	} catch (e) {
 		console.error('❌ Linking error in link.js:', e);
 	}

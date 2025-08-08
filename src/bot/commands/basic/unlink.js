@@ -1,11 +1,10 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { permission } = require('../../../config/config.json');
+const { command } = require('../../../config/permission.json');
 const { checkEmoji, crossEmoji } = require('../../../config/config.json');
 const { guildId, registeredRole, nonRegisteredRole } = require('../../../config/config.json');
 const User = require('../../../database/models/userSchema.js');
 
 module.exports = {
-	cooldown: 5,
 	data: new SlashCommandBuilder()
 		.setName('unlink')
 		.setDescription('Unlink player and delete player data.')
@@ -18,7 +17,7 @@ module.exports = {
 
         const commandName = interaction.commandName;
         const member = interaction.member; 
-        const allowedRoles = permission[commandName];
+        const allowedRoles = command[commandName];
 
         if (!allowedRoles) {
             return interaction.editReply(`<:crosser:${crossEmoji}> This command is not configured for permission checks.`);

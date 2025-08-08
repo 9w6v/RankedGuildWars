@@ -6,6 +6,6 @@ mongoose.connect(process.env.MONGODB_URI);
 
 run();
 async function run() {
-    const user = await User.findOne({ ign: "fumxta" });
+    const user = await User.find();
     console.log(user);
 }
