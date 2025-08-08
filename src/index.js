@@ -1,6 +1,7 @@
 require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
+const connect = require('./database/connect.js');
 const { createBot } = require('./mineflayer/bot.js');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 
@@ -9,6 +10,7 @@ const client = new Client({
 });
 
 createBot();
+connect();
 
 client.commands = new Collection();
 

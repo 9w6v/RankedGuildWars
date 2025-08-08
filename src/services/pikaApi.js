@@ -22,4 +22,4 @@ async function getPlayerProfile(playerIGN) {
   }
 }
 
-export { getPlayerProfile };
+module.exports = getPlayerProfile;

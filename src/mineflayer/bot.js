@@ -1,6 +1,7 @@
 require('dotenv').config();
 const mineflayer = require('mineflayer');
 const botConfig = require('../config/botConfig.js');
+const { initLinkingListener } = require('./linking.js');
 
 let bot;
 
@@ -25,7 +26,7 @@ function createBot() {
         bot.setQuickBarSlot(4);
         bot.activateItem();
       
-
+        initLinkingListener(bot);
     })
 
     bot.on('windowOpen', async (window) => {
@@ -53,6 +54,8 @@ function createBot() {
                     await bot.clickWindow(item.slot, 0, 0);
                     console.log('[RankedGuildWars] Joined Bedwars Lobby #1');
                     await sleep(2000);
+                    bot.setControlState('right', true);
+                    setTimeout(() => { bot.clearControlStates() } , 1000);
                     break;
                 }
             }
@@ -90,8 +93,4 @@ function createBot() {
 
 }
 
-function getBot() {
-    return bot;
-}
-
-module.exports = { getBot, createBot };
+module.exports = { createBot };

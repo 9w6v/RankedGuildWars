@@ -1,8 +1,8 @@
 const { SlashCommandBuilder } = require('discord.js');
 const getPlayerProfile = require('../../../services/pikaApi.js');
-const { checkEmoji, crossEmoji } = require('../../config/config.js');
+const { checkEmoji, crossEmoji } = require('../../../config/config.json');
 const { generateCode, storeCode } = require('../../../utils/codeManager.js');
-const User = require('../../../database/userSchema.js');
+const User = require('../../../database/models/userSchema.js');
 const { registeredRole, nonRegisteredRole, guildId } = require('../../../config/config.json');
 
 module.exports = {
@@ -10,15 +10,15 @@ module.exports = {
 		.setName('link')
 		.setDescription('Links you discord account with your in-game name.')
 		.addStringOption(option =>
-			option.setName('IGN')
+			option.setName('ign')
 				.setDescription('In-Game Name')
 				.setRequired(true)),
 	async execute(interaction) {
         await interaction.deferReply();
 
-		const IGN = interaction.options.getString('IGN');
-        const { data, error } = await getPlayerProfile(IGN);
+		const IGN = interaction.options.getString('ign');
 
+        const { data, error } = await getPlayerProfile(IGN);
         if (error === 'not_found_in_database') {
             await interaction.editReply(`<:crosser:${crossEmoji}> Please enter a valid in-game name.` );
             return;
@@ -26,12 +26,20 @@ module.exports = {
             await interaction.editReply(`<:crosser:${crossEmoji}> There was an error during linking process.` );
             return;
         }
+		
+		const user = await User.findOne({ ign: data.username });
+		if (user) {
+			if (user.ign.toLowerCase() === data.username.toLowerCase()) {
+				await interaction.editReply(`<:crosser:${crossEmoji}> \`${IGN}\` is already linked to <@${user.discordId}>` );
+				return;
+			}
+		}	
 
 		const code = generateCode();
-		storeCode(code, interaction.user.id, IGN, interaction, interaction.client);
+		storeCode(code, interaction.user.id, data.username, interaction, interaction.client);
 
 		await interaction.editReply(`🔒 Your verification code is: \`${code}\`\n` +
-    `Go to Minecraft and type: \`/msg RankedGuildWars =link ${code}\``);
+    `Go to \`play.pika-network.net\` and type: \`/msg RankedGuildWars =link ${code}\``);
 
 	},
 };
