@@ -4,5 +4,13 @@
   "checkEmoji": "1402308702987358360",
   "crossEmoji": "1402308380374204449",
   "registeredRole": "1402984977939038368",
-  "nonRegisteredRole": "1403033837738655877"
+  "nonRegisteredRole": "1403033837738655877",
+  "permission": {
+    "link": [
+      "everyone"
+    ],
+    "unlink": [
+      "1403306116112318586"
+    ]
+  }
 }

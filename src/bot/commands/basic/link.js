@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const getPlayerProfile = require('../../../services/pikaApi.js');
-const { checkEmoji, crossEmoji } = require('../../../config/config.json');
+const { permission } = require('../../../config/config.json');
+const { checkEmoji, crossEmoji }  = require('../../../config/config.json');
 const { generateCode, storeCode } = require('../../../utils/codeManager.js');
 const User = require('../../../database/models/userSchema.js');
 const { registeredRole, nonRegisteredRole, guildId } = require('../../../config/config.json');
@@ -8,13 +9,33 @@ const { registeredRole, nonRegisteredRole, guildId } = require('../../../config/
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('link')
-		.setDescription('Links you discord account with your in-game name.')
+		.setDescription('Links your Discord account with your Minecraft account.')
 		.addStringOption(option =>
 			option.setName('ign')
 				.setDescription('In-Game Name')
 				.setRequired(true)),
 	async execute(interaction) {
         await interaction.deferReply();
+
+		const commandName = interaction.commandName;
+        const member = interaction.member; 
+        const allowedRoles = permission[commandName];
+
+        if (!allowedRoles) {
+            return interaction.editReply(`<:crosser:${crossEmoji}> This command is not configured for permission checks.`);
+        }
+
+        if (allowedRoles.includes('everyone')) {
+            
+        } else {
+            const hasPermission = allowedRoles.some(roleId =>
+                member.roles.cache.has(roleId)
+            );
+
+            if (!hasPermission) {
+                return interaction.editReply(`<:crosser:${crossEmoji}> You do not have permission to use this command.`);
+            }
+        }
 
 		const IGN = interaction.options.getString('ign');
 
