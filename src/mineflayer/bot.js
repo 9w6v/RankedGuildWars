@@ -16,11 +16,9 @@ function createBot() {
 
 
     bot.once('spawn', async () => {
-        console.log('[RankedGuildWars] Bot Spawned');
 
         await sleep(2000);
         bot.chat(`/login ${process.env.BOT_PASSWORD}`);
-        console.log("[RankedGuildWars] Logged in.");
         
         await sleep(2000);
         bot.setQuickBarSlot(4);
@@ -33,16 +31,13 @@ function createBot() {
         if (!window.title) return;
 
         if (window.title.includes('Server Selector')) {
-            console.log('[RankedGuildWars] Opened Server Selecter Menu');
             const bedItem = window.slots.find((item) => item && item.name === 'bed');
             if (!bedItem) return;
             
             bot.clickWindow(bedItem.slot, 0, 0);
-            console.log('[RankedGuildWars] Joined Bedwars Lobby');
             await sleep(2000);
             goToFirstLobby();
         } else if (window.title.includes('Lobby Selector')) {
-            console.log('[RankedGuildWars] Opened Lobby Selecter Menu');
             await sleep(2000);
 
             for (const item of window.slots) {
@@ -52,7 +47,7 @@ function createBot() {
                 const itemName = stripMinecraftColors(rawName);
                 if (itemName == 'BedWars Lobby #1') {
                     await bot.clickWindow(item.slot, 0, 0);
-                    console.log('[RankedGuildWars] Joined Bedwars Lobby #1');
+                    console.log('[RankedGuildWars] Bot Spawned!');
                     await sleep(2000);
                     bot.setControlState('right', true);
                     setTimeout(() => { bot.clearControlStates() } , 1000);

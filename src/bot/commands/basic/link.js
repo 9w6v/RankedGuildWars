@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const getPlayerProfile = require('../../../services/pikaApi.js');
 const { command } = require('../../../config/permission.json');
-const { checkEmoji, crossEmoji }  = require('../../../config/config.json');
+const { checkEmoji, crossEmoji, linkLogs }  = require('../../../config/config.json');
 const { generateCode, storeCode } = require('../../../utils/codeManager.js');
 const User = require('../../../database/models/userSchema.js');
 const { registeredRole, nonRegisteredRole, guildId } = require('../../../config/config.json');
@@ -22,7 +22,7 @@ module.exports = {
         const allowedRoles = command[commandName];
 
         if (!allowedRoles) {
-            return interaction.editReply(`<:crosser:${crossEmoji}> This command is not configured for permission checks.`);
+            return interaction.editReply(`${crossEmoji} This command is not configured for permission checks.`);
         }
 
         if (allowedRoles.includes('everyone')) {
@@ -33,7 +33,7 @@ module.exports = {
             );
 
             if (!hasPermission) {
-                return interaction.editReply(`<:crosser:${crossEmoji}> You do not have permission to use this command.`);
+                return interaction.editReply(`${crossEmoji} You do not have permission to use this command.`);
             }
         }
 
@@ -41,22 +41,29 @@ module.exports = {
 
 		const ignRegex = /^[a-zA-Z0-9_]{3,16}$/;
 		if (!ignRegex.test(IGN)) {
-			return interaction.editReply(`<:crosser:${crossEmoji}> Please enter a valid Minecraft in-game name.`);
+			return interaction.editReply(`${crossEmoji} Please enter a valid Minecraft in-game name.`);
 		}
 
         const { data, error } = await getPlayerProfile(IGN);
         if (error === 'not_found_in_database') {
-            await interaction.editReply(`<:crosser:${crossEmoji}> Please enter a valid in-game name.` );
+            await interaction.editReply(`${crossEmoji} Please enter a valid in-game name.` );
             return;
         } else if (error !== null) {
-            await interaction.editReply(`<:crosser:${crossEmoji}> Please enter a valid in-game name.` );
+            await interaction.editReply(`${crossEmoji} Please enter a valid in-game name.` );
             return;
         }
 		
 		const user = await User.findOne({ ign: data.username });
 		if (user) {
 			if (user.ign.toLowerCase() === data.username.toLowerCase()) {
-				await interaction.editReply(`<:crosser:${crossEmoji}> \`${IGN}\` is already linked to <@${user.discordId}>` );
+				const channel = await interaction.client.channels.fetch(linkLogs);
+
+				if (user.discordId === member.id) {
+					await interaction.editReply(`${crossEmoji} You are already linked to \`${IGN}\`` );
+				} else {
+					await interaction.editReply(`${crossEmoji} \`${IGN}\` is already linked to <@${user.discordId}>` );
+					channel.send(`${interaction.user} failed to link to \`${data.username}\` as it's already linked to \`${user.discordId}\` ${crossEmoji}`);
+				}
 				return;
 			}
 		}	
@@ -78,11 +85,17 @@ async function completeLinkingProcess(info, ign) {
 
 		const guild = await client.guilds.fetch(guildId);
 		const member = await guild.members.fetch(discordId);
+		const channel = await client.channels.fetch(linkLogs);
+
 
 		if (user) {
+			const nickname = member.nickname || member.user.username;
+
 			await member.setNickname(ign);
 			user.ign = ign;
 			user.save();
+
+			channel.send(`<@${discordId}> has successfully relinked: \`${nickname}\` → \`${ign}\` ${checkEmoji}`);
 		} else {
 			await member.roles.add(registeredRole);
 			await member.roles.remove(nonRegisteredRole);
@@ -92,9 +105,11 @@ async function completeLinkingProcess(info, ign) {
 				discordId: discordId,
 				ign: ign,
 			});
+
+			channel.send(`<@${discordId}>  has successfully linked to \`${ign}\` ${checkEmoji}`);
 		}
 
-		await interaction.editReply(`<:ticker:${checkEmoji}> You have successfully linked your Discord account with \`${ign}\``);
+		await interaction.editReply(`${checkEmoji} You have successfully linked your Discord account with \`${ign}\``);
 	} catch (e) {
 		console.error('❌ Linking error in link.js:', e);
 	}
