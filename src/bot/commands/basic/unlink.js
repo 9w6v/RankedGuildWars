@@ -39,7 +39,7 @@ module.exports = {
 
         const isValidFormat = /^\d{17,20}$/.test(userId);
         if (!isValidFormat) {
-        return interaction.editReply(`${crossEmoji} Provide a Valid User ID.`);
+            return interaction.editReply(`${crossEmoji} Provide a Valid User ID.`);
         }
 
         const user = await User.findOne({ discordId: userId });
@@ -49,14 +49,16 @@ module.exports = {
             const guild = await interaction.client.guilds.fetch(guildId);
             const member = await guild.members.fetch(userId);
             const channel = await interaction.client.channels.fetch(linkLogs);
-
+            
+            if (member) {
             await member.roles.remove(registeredRole);
             await member.roles.add(nonRegisteredRole);
             await member.setNickname(null);
+            }
 
             await interaction.editReply(`${checkEmoji} \`${userId}\` has been Successfully Unlinked.`);
 
-            channel.send(`${member} has been successfully unlinked *by ${interaction.user}* ${checkEmoji}`);
+            channel.send(`\`${userId}\` has been successfully unlinked *by ${interaction.user}* ${checkEmoji}`);
         } else {
             await interaction.editReply(`${crossEmoji} \`${userId}\` is not linked.`);
         }

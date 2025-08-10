@@ -9,7 +9,7 @@ const { registeredRole, nonRegisteredRole, guildId } = require('../../../config/
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('link')
-		.setDescription('Links your Discord account with your Minecraft account.')
+		.setDescription('Links your Discord account with your Minecraft account')
 		.addStringOption(option =>
 			option.setName('ign')
 				.setDescription('In-Game Name')

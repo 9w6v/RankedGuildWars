@@ -8,7 +8,7 @@ const { registeredRole, nonRegisteredRole } = require('../../../config/config.js
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('forcelink')
-		.setDescription('Force link a Minecraft account with a Discord account.')
+		.setDescription('Force link a Minecraft account with a Discord account')
         .addUserOption(option => 
             option.setName('user')
             .setDescription('The user to link')
